@@ -1,6 +1,12 @@
 # Atalhos da demonstração. Requer Docker e Python 3.11+.
 export ZABBIX_URL ?= http://localhost:8080
 export ZABBIX_PASSWORD ?= zabbix
+# O .env (se existir) alimenta o compose e os atalhos de caos.
+-include .env
+export
+
+CHAOS = @test -n "$$CHAOS_TOKEN" || { echo "Defina CHAOS_TOKEN no .env (ou use o painel com login)."; exit 1; }; \
+	curl -fsS -X POST -H "x-chaos-token: $$CHAOS_TOKEN" http://localhost:8000/chaos
 
 .PHONY: up install wait plan apply demo down slow normal logs test stop
 
@@ -20,13 +26,13 @@ apply: wait    ## Aplica monitoring/zabbix.yaml
 	.venv/bin/zbxctl apply
 
 down:          ## Derruba a loja (dispara o alerta)
-	curl -fsS -X POST http://localhost:8000/chaos/down -H "x-chaos-token: $$CHAOS_TOKEN"; echo
+	$(CHAOS)/down; echo
 
 slow:          ## Deixa a loja lenta
-	curl -fsS -X POST http://localhost:8000/chaos/slow -H "x-chaos-token: $$CHAOS_TOKEN"; echo
+	$(CHAOS)/slow; echo
 
 normal:        ## Religa a loja (alerta de resolvido)
-	curl -fsS -X POST http://localhost:8000/chaos/normal -H "x-chaos-token: $$CHAOS_TOKEN"; echo
+	$(CHAOS)/normal; echo
 
 demo: up install apply  ## Tudo de uma vez: sobe, instala e aplica
 	@echo "Zabbix: http://localhost:8080  Grafana: http://localhost:3000  Loja: http://localhost:8000"

@@ -92,6 +92,10 @@ services:
     build: demo-app
     environment:
       CHAOS_TOKEN: ${CHAOS_TOKEN:-}
+      DEMO_EMAIL: ${DEMO_EMAIL:-admin@loja.demo}
+      # Vazia: o app gera uma senha forte e mostra em `docker compose logs demo-app`.
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:
       - '127.0.0.1:8000:8000'
     restart: unless-stopped

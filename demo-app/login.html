@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#07080a">
+<title>Entrar · Loja demo</title>
+<style>
+  :root {
+    --bg: #07080a;
+    --text: #f5f5f7;
+    --soft: #8a8f98;
+    --line: rgba(255, 255, 255, .1);
+    --field: rgba(255, 255, 255, .06);
+    --ok: #30d158; --ok-2: #66e3a1;
+    --down: #ff453a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    min-height: 100vh; min-height: 100dvh; display: grid; place-items: center;
+    background: var(--bg); color: var(--text);
+    font: 17px/1.47 -apple-system, BlinkMacSystemFont, "Inter Display", "Inter", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased; letter-spacing: -.01em;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  body::before {
+    content: ""; position: fixed; inset: -20vmax; z-index: -1; pointer-events: none;
+    background: radial-gradient(38vmax 28vmax at 50% 30%, color-mix(in srgb, var(--ok) 20%, transparent), transparent 70%);
+  }
+  main { width: min(24rem, 88vw); text-align: center; padding: 3rem 0; }
+
+  .orb {
+    width: 3.6rem; height: 3.6rem; margin: 0 auto 1.8rem; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--ok-2), var(--ok) 60%);
+    box-shadow: 0 0 2.2rem color-mix(in srgb, var(--ok) 55%, transparent),
+                0 0 0 .45rem color-mix(in srgb, var(--ok) 14%, transparent);
+    animation: breathe 3.2s ease-in-out infinite;
+  }
+  @keyframes breathe { 50% { transform: scale(1.06); } }
+
+  h1 {
+    margin: 0; font-size: 2.35rem; line-height: 1.08; font-weight: 700; letter-spacing: -.04em;
+    background: linear-gradient(180deg, #fff 35%, color-mix(in srgb, var(--ok-2) 55%, #fff));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lead { color: var(--soft); margin: .6rem 0 2.2rem; }
+
+  form { text-align: left; }
+  .group {
+    background: var(--field); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    transition: border-color .25s;
+  }
+  .group:focus-within { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
+  .row { display: flex; align-items: center; gap: .6rem; padding: 0 1rem; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row label { width: 4.2rem; flex: none; color: var(--soft); font-size: .95rem; }
+  .row input {
+    flex: 1; min-width: 0; height: 3.4rem; border: 0; outline: 0; background: none; color: var(--text);
+    font: inherit; letter-spacing: inherit; caret-color: var(--ok);
+  }
+  .row input::placeholder { color: rgba(255, 255, 255, .28); }
+  .reveal {
+    flex: none; border: 0; background: none; color: var(--soft); font: inherit; font-size: .9rem;
+    cursor: pointer; padding: .4rem 0 .4rem .4rem; border-radius: 8px;
+  }
+  .reveal:focus-visible, .submit:focus-visible { outline: 2px solid var(--ok); outline-offset: 3px; }
+
+  .error { min-height: 1.5rem; margin: .8rem .2rem 0; color: var(--down); font-size: .92rem; }
+  .group[aria-invalid=true] { border-color: color-mix(in srgb, var(--down) 60%, var(--line)); animation: shake .4s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+  .submit {
+    width: 100%; height: 3.4rem; margin-top: .6rem; border: 0; border-radius: 999px; cursor: pointer;
+    background: rgba(255, 255, 255, .94); color: #0b0c0e; font: inherit; font-weight: 650;
+    display: flex; align-items: center; justify-content: center; gap: .6rem;
+    transition: transform .15s ease, opacity .2s;
+  }
+  .submit:active { transform: scale(.98); }
+  .submit[disabled] { opacity: .75; cursor: progress; }
+  .spinner {
+    width: 1.05rem; height: 1.05rem; border-radius: 50%; display: none;
+    border: 2px solid rgba(0, 0, 0, .18); border-top-color: #0b0c0e; animation: spin .7s linear infinite;
+  }
+  .submit[disabled] .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .note { color: var(--soft); font-size: .85rem; text-align: center; margin: 1.6rem 0 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb, .group[aria-invalid=true] { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="orb" aria-hidden="true"></div>
+  <h1>Entre no painel.</h1>
+  <p class="lead">Loja demo, monitorada pelo Zabbix.</p>
+
+  <form id="form" novalidate>
+    <div class="group" id="group">
+      <div class="row">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" autocomplete="username" inputmode="email"
+               autocapitalize="none" spellcheck="false" placeholder="voce@empresa.com" required maxlength="254">
+      </div>
+      <div class="row">
+        <label for="password">Senha</label>
+        <input id="password" name="password" type="password" autocomplete="current-password"
+               placeholder="Obrigatória" required maxlength="256">
+        <button class="reveal" type="button" id="reveal" aria-controls="password" aria-pressed="false">Mostrar</button>
+      </div>
+    </div>
+    <p class="error" id="error" role="alert" aria-live="assertive"></p>
+    <button class="submit" id="submit" type="submit"><span class="spinner" aria-hidden="true"></span><span id="label">Entrar</span></button>
+  </form>
+  <p class="note">Depois de 5 tentativas erradas, o acesso fica bloqueado por 5 minutos.</p>
+</main>
+<script>
+const form = document.getElementById("form");
+const group = document.getElementById("group");
+const error = document.getElementById("error");
+const submit = document.getElementById("submit");
+const label = document.getElementById("label");
+const password = document.getElementById("password");
+const reveal = document.getElementById("reveal");
+
+reveal.addEventListener("click", () => {
+  const show = password.type === "password";
+  password.type = show ? "text" : "password";
+  reveal.textContent = show ? "Ocultar" : "Mostrar";
+  reveal.setAttribute("aria-pressed", String(show));
+});
+
+function fail(message) {
+  error.textContent = message;
+  group.setAttribute("aria-invalid", "false");
+  void group.offsetWidth; // reinicia a animação de erro
+  group.setAttribute("aria-invalid", "true");
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const email = form.email.value.trim();
+  if (!email || !password.value) { fail("Preencha e-mail e senha."); return; }
+
+  submit.disabled = true; label.textContent = "Entrando…"; error.textContent = "";
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password: password.value }),
+    });
+    if (res.status === 204) { location.replace("/"); return; }
+    const body = await res.json().catch(() => ({}));
+    fail(typeof body.detail === "string" ? body.detail : "Não foi possível entrar. Tente de novo.");
+    password.value = ""; password.focus();
+  } catch {
+    fail("Sem conexão com a loja. Verifique se o container está rodando.");
+  }
+  submit.disabled = false; label.textContent = "Entrar";
+});
+</script>
+</body>
+</html>

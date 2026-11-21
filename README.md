@@ -16,6 +16,10 @@
   <img src="docs/painel-caos.png" width="49%" alt="Painel da loja demo operando normal">
   <img src="docs/painel-caos-fora.png" width="49%" alt="Painel da loja demo fora do ar">
 </p>
+<p align="center">
+  <img src="docs/celular-login.png" width="30%" alt="Login do painel no celular, com aviso de senha incorreta">
+  <img src="docs/celular-painel.png" width="30%" alt="Painel no celular com a loja fora do ar">
+</p>
 
 </div>
 
@@ -85,7 +89,7 @@ make demo                     # sobe a stack, instala o zbxctl e aplica o monito
 | --- | --- | --- |
 | Zabbix | http://localhost:8080 | Admin / zabbix |
 | Grafana | http://localhost:3000 | admin / admin |
-| Loja demo (painel de caos) | http://localhost:8000 | — |
+| Loja demo (painel de caos) | http://localhost:8000 | `DEMO_EMAIL` / `DEMO_PASSWORD` (ou a senha gerada no log) |
 
 Para simular um incidente, abra a loja e clique em **Derrubar**, ou rode `make down`. Em menos de um minuto o Zabbix abre o problema, o Grafana fica vermelho e o Telegram recebe o alerta. `make normal` religa e dispara a mensagem de resolvido.
 
@@ -139,7 +143,9 @@ Resultado da última execução no CI: web check saudável em 15 s, problema abe
 - Portas publicadas só em `127.0.0.1`.
 - Autenticação da API pelo header `Authorization: Bearer`, como documentado a partir do Zabbix 7.0 (o campo `auth` no corpo está deprecado).
 - Token do Telegram e senhas só em variáveis de ambiente; `.env` no `.gitignore`.
-- Botões de caos podem exigir token (`CHAOS_TOKEN`).
+- Painel de caos com login: senha com hash scrypt, sessão em cookie `HttpOnly` + `SameSite=Strict`, token guardado só como SHA-256, checagem de origem contra CSRF e bloqueio de 5 min após 5 tentativas erradas.
+- Sem `DEMO_PASSWORD`, o app gera uma senha forte no primeiro start e mostra em `docker compose logs demo-app` (nada de senha padrão).
+- Automações mudam o modo com o cabeçalho `X-Chaos-Token` (`CHAOS_TOKEN`); o `/health` continua público para o Zabbix.
 - Imagens com usuário não-root na loja demo.
 
 As senhas padrão (`zabbix`, `admin`) existem para a demonstração local. Antes de expor qualquer porta, troque a senha do Admin, crie um API token e use `ZABBIX_API_TOKEN`.

@@ -57,6 +57,8 @@ jobs:
       # Credenciais fictícias: valida a criação do media type e da ação sem enviar nada.
       TELEGRAM_BOT_TOKEN: '000000:ci-dummy'
       TELEGRAM_CHAT_ID: '0'
+      CHAOS_TOKEN: ci-chaos-token
+      DEMO_PASSWORD: ci-demo-password
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

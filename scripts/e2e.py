@@ -19,6 +19,8 @@ from zbxctl.api import ZabbixAPI
 
 ZABBIX_URL = os.getenv("ZABBIX_URL", "http://localhost:8080")
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+# O caos exige login ou token; a automação usa o token.
+CHAOS_HEADERS = {"x-chaos-token": os.environ["CHAOS_TOKEN"]}
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 PROBLEM = "Health fora do ar em demo-app"
 
@@ -86,10 +88,10 @@ def main() -> None:
     )
     wait_for("agente reportando CPU", lambda: item_value(agent, "system.cpu.util") is not None)
 
-    httpx.post(f"{APP_URL}/chaos/down", timeout=5).raise_for_status()
+    httpx.post(f"{APP_URL}/chaos/down", headers=CHAOS_HEADERS, timeout=5).raise_for_status()
     wait_for("Zabbix abriu o problema de queda", lambda: PROBLEM in problems(), timeout=180)
 
-    httpx.post(f"{APP_URL}/chaos/normal", timeout=5).raise_for_status()
+    httpx.post(f"{APP_URL}/chaos/normal", headers=CHAOS_HEADERS, timeout=5).raise_for_status()
     wait_for("problema resolvido após religar", lambda: PROBLEM not in problems(), timeout=180)
 
     auth = ("admin", os.getenv("GRAFANA_ADMIN_PASSWORD", "admin"))
