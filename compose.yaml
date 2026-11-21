@@ -35,6 +35,19 @@ services:
         condition: service_healthy
     restart: 'no'
 
+  # Banco recém-criado não tem estatísticas: sem ANALYZE, o Postgres escolhe planos
+  # ruins para as consultas de dependência de triggers (minutos ao linkar templates
+  # e na sincronização de configuração do server). Roda uma vez, logo após o init.
+  zabbix-db-analyze:
+    image: postgres:16-alpine
+    command: ['psql', '-h', 'postgres', '-U', 'zabbix', '-d', 'zabbix', '-c', 'ANALYZE']
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-zabbix}
+    depends_on:
+      zabbix-db-init:
+        condition: service_completed_successfully
+    restart: 'no'
+
   zabbix-server:
     image: *zabbix-server-image
     environment:
@@ -44,7 +57,7 @@ services:
       # Recarrega a configuração a cada 10 s: o que o zbxctl aplica entra em ação rápido.
       ZBX_CACHEUPDATEFREQUENCY: '10'
     depends_on:
-      zabbix-db-init:
+      zabbix-db-analyze:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy

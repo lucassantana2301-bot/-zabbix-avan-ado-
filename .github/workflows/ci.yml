@@ -84,8 +84,6 @@ jobs:
           SH
           nohup bash monitor.sh > pg-activity.log 2>&1 &
       - name: Aplica o monitoramento como código
-        env:
-          ZABBIX_TIMEOUT: '600'
         run: zbxctl apply -f monitoring/zabbix.yaml
       - name: Idempotência (o segundo plan não pode ter mudanças)
         run: zbxctl plan -f monitoring/zabbix.yaml --detailed-exitcode
