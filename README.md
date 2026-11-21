@@ -12,7 +12,10 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![Telegram](https://img.shields.io/badge/alertas-Telegram-26A5E4?logo=telegram&logoColor=white)
 
-![Painel da loja demo: operando normal e fora do ar](docs/painel-caos.png)
+<p align="center">
+  <img src="docs/painel-caos.png" width="49%" alt="Painel da loja demo operando normal">
+  <img src="docs/painel-caos-fora.png" width="49%" alt="Painel da loja demo fora do ar">
+</p>
 
 </div>
 

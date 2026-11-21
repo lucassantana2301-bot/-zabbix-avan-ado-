@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Loja demo · simulador de incidente</title>
+<style>
+  :root {
+    --bg: #07080a;
+    --text: #f5f5f7;
+    --soft: #8a8f98;
+    --line: rgba(255, 255, 255, .09);
+    --ok: #30d158;   --ok-2: #66e3a1;
+    --warn: #ffb340; --warn-2: #ffd479;
+    --down: #ff453a; --down-2: #ff8a65;
+    --accent: var(--ok); --accent-2: var(--ok-2);
+  }
+  [data-mode=slow] { --accent: var(--warn); --accent-2: var(--warn-2); }
+  [data-mode=down] { --accent: var(--down); --accent-2: var(--down-2); }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    min-height: 100vh; display: grid; place-items: center;
+    background: var(--bg); color: var(--text);
+    font: 17px/1.47 -apple-system, BlinkMacSystemFont, "Inter Display", "Inter", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased; letter-spacing: -.01em; overflow-x: hidden;
+  }
+  /* Luz ambiente que acompanha o estado */
+  body::before {
+    content: ""; position: fixed; inset: -20vmax; z-index: -1; pointer-events: none;
+    background: radial-gradient(40vmax 30vmax at 50% 38%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 70%);
+    transition: background .8s ease;
+  }
+  main { width: min(46rem, 92vw); text-align: center; padding: 3rem 0; }
+
+  .eyebrow { color: var(--soft); font-size: .95rem; margin: 0 0 2.4rem; }
+
+  .orb {
+    width: 5.5rem; height: 5.5rem; margin: 0 auto 2rem; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent) 60%);
+    box-shadow: 0 0 2.5rem color-mix(in srgb, var(--accent) 55%, transparent),
+                0 0 0 .55rem color-mix(in srgb, var(--accent) 14%, transparent);
+    transition: background .6s ease, box-shadow .6s ease;
+    animation: breathe 3.2s ease-in-out infinite;
+  }
+  [data-mode=down] .orb { animation-duration: 1.1s; }
+  @keyframes breathe { 50% { transform: scale(1.06); box-shadow: 0 0 3.6rem color-mix(in srgb, var(--accent) 70%, transparent),
+                                                          0 0 0 .9rem color-mix(in srgb, var(--accent) 9%, transparent); } }
+
+  h1 {
+    margin: 0; font-size: clamp(2.4rem, 8vw, 4.6rem); line-height: 1.05; text-wrap: balance; font-weight: 700; letter-spacing: -.045em;
+    background: linear-gradient(180deg, #fff 30%, color-mix(in srgb, var(--accent-2) 70%, #fff));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lead { color: var(--soft); font-size: 1.2rem; margin: 1rem 0 2.6rem; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-bottom: 1.4rem; }
+  .stat { background: rgba(255, 255, 255, .045); border: 1px solid var(--line); border-radius: 18px; padding: 1rem .9rem 1.05rem; }
+  .stat dt { color: var(--soft); font-size: .82rem; }
+  .stat dd { margin: .15rem 0 0; font-size: 1.9rem; font-weight: 650; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+
+  .history { display: flex; gap: 3px; height: 2.1rem; align-items: flex-end; margin: 0 0 2.6rem; padding: 0 .2rem; }
+  .history i { flex: 1; border-radius: 3px; background: rgba(255, 255, 255, .08); height: 100%; transition: background .3s; }
+  .history i.ok { background: color-mix(in srgb, var(--ok) 85%, transparent); }
+  .history i.slow { background: var(--warn); }
+  .history i.fail { background: var(--down); }
+
+  .segmented {
+    position: relative; display: grid; grid-template-columns: repeat(3, 1fr);
+    background: rgba(255, 255, 255, .07); border: 1px solid var(--line); border-radius: 999px; padding: 4px;
+  }
+  .segmented .thumb {
+    position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); border-radius: 999px;
+    background: rgba(255, 255, 255, .92); box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+  }
+  .segmented button {
+    position: relative; z-index: 1; border: 0; background: none; color: var(--text); cursor: pointer;
+    font: inherit; font-weight: 600; font-size: 1.02rem; padding: .85rem .5rem; border-radius: 999px;
+    transition: color .3s;
+  }
+  .segmented button[aria-pressed=true] { color: #0b0c0e; }
+  .segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hint { color: var(--soft); font-size: .9rem; margin: 1.6rem 0 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb { animation: none; } .segmented .thumb, body::before { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main data-mode="normal">
+  <p class="eyebrow">Loja demo, monitorada pelo Zabbix</p>
+  <div class="orb" aria-hidden="true"></div>
+  <h1 id="state">Operando normal.</h1>
+  <p class="lead" id="lead">Tudo respondendo. O Zabbix checa a cada 15 segundos.</p>
+
+  <dl class="stats" aria-live="polite">
+    <div class="stat"><dt>Latência</dt><dd id="latency">—</dd></div>
+    <div class="stat"><dt>Disponibilidade</dt><dd id="uptime">—</dd></div>
+    <div class="stat"><dt>Neste estado há</dt><dd id="since">—</dd></div>
+  </dl>
+  <div class="history" id="history" aria-label="Últimas checagens do /health"></div>
+
+  <div class="segmented" role="group" aria-label="Modo da loja">
+    <span class="thumb" id="thumb"></span>
+    <button data-set="normal" aria-pressed="true">Normal</button>
+    <button data-set="slow" aria-pressed="false">Lenta</button>
+    <button data-set="down" aria-pressed="false">Derrubar</button>
+  </div>
+  <p class="hint">Ao derrubar, o alerta chega no Telegram em segundos.</p>
+</main>
+<script>
+const COPY = {
+  normal: ["Operando normal.", "Tudo respondendo. O Zabbix checa a cada 15 segundos."],
+  slow:   ["Lenta.", "Respostas acima de 1,5 s disparam o alerta de lentidão."],
+  down:   ["Fora do ar.", "O /health responde 503. O Zabbix vai perceber."],
+};
+const ORDER = ["normal", "slow", "down"];
+const main = document.querySelector("main");
+const history = document.getElementById("history");
+const BARS = 40;
+for (let i = 0; i < BARS; i++) history.appendChild(document.createElement("i"));
+const samples = [];
+let total = 0, ok = 0, current = null;
+
+function applyMode(s) {
+  if (current !== s.mode) {
+    current = s.mode;
+    main.dataset.mode = s.mode;
+    document.getElementById("state").textContent = COPY[s.mode][0];
+    document.getElementById("lead").textContent = COPY[s.mode][1];
+    document.getElementById("thumb").style.transform = `translateX(${ORDER.indexOf(s.mode) * 100}%)`;
+    document.querySelectorAll("[data-set]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.set === s.mode)));
+  }
+  const secs = Math.max(0, Math.round(Date.now() / 1000 - s.since));
+  document.getElementById("since").textContent = secs < 60 ? `${secs} s` : `${Math.floor(secs / 60)} min`;
+}
+
+// Latência real: o navegador mede o próprio /health, uma checagem por vez.
+async function probe() {
+  const started = performance.now();
+  let kind = "fail", ms = null;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 4000);
+    const res = await fetch("/health", { cache: "no-store", signal: ctrl.signal });
+    clearTimeout(timer);
+    ms = performance.now() - started;
+    kind = !res.ok ? "fail" : ms > 1500 ? "slow" : "ok";
+  } catch { kind = "fail"; }
+  total++; if (kind !== "fail") ok++;
+  samples.push(kind); if (samples.length > BARS) samples.shift();
+  [...history.children].forEach((el, i) => {
+    const k = samples[i - (BARS - samples.length)];
+    el.className = k || "";
+  });
+  document.getElementById("latency").textContent = kind === "fail" ? "erro" : `${Math.round(ms)} ms`;
+  document.getElementById("uptime").textContent = `${((ok / total) * 100).toFixed(1).replace(".", ",")}%`;
+  setTimeout(probe, 1000);
+}
+
+async function refresh() {
+  try { applyMode(await (await fetch("/chaos", { cache: "no-store" })).json()); } catch { /* servidor reiniciando */ }
+}
+
+document.querySelectorAll("[data-set]").forEach(b => b.addEventListener("click", async () => {
+  const token = new URLSearchParams(location.search).get("token") || "";
+  const res = await fetch("/chaos/" + b.dataset.set, { method: "POST", headers: { "x-chaos-token": token } });
+  if (!res.ok) { alert("Não autorizado: abra o painel com ?token=SEU_TOKEN"); return; }
+  refresh();
+}));
+refresh(); setInterval(refresh, 1000); probe();
+</script>
+</body>
+</html>
