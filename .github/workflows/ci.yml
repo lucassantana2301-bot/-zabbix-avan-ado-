@@ -67,7 +67,25 @@ jobs:
         run: docker compose up -d --build
       - name: Espera a API do Zabbix
         run: zbxctl wait --timeout 400
+      - name: Diagnóstico do banco durante o apply (em segundo plano)
+        run: |
+          cat > activity.sql <<'SQL'
+          SELECT pid, state, wait_event_type, wait_event, now() - query_start AS running,
+                 left(translate(query, chr(10), ' '), 160) AS query
+            FROM pg_stat_activity
+           WHERE datname = 'zabbix' AND state <> 'idle' AND pid <> pg_backend_pid();
+          SQL
+          cat > monitor.sh <<'SH'
+          for i in $(seq 1 60); do
+            echo "=== $(date +%T)"
+            docker compose exec -T postgres psql -U zabbix -d zabbix -At < activity.sql
+            sleep 10
+          done
+          SH
+          nohup bash monitor.sh > pg-activity.log 2>&1 &
       - name: Aplica o monitoramento como código
+        env:
+          ZABBIX_TIMEOUT: '600'
         run: zbxctl apply -f monitoring/zabbix.yaml
       - name: Idempotência (o segundo plan não pode ter mudanças)
         run: zbxctl plan -f monitoring/zabbix.yaml --detailed-exitcode
@@ -75,4 +93,6 @@ jobs:
         run: python scripts/e2e.py
       - name: Logs em caso de falha
         if: failure()
-        run: docker compose logs --tail=200
+        run: |
+          echo "----- pg_stat_activity -----"; cat pg-activity.log || true
+          docker compose logs --tail=200
