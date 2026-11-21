@@ -22,7 +22,8 @@ EXIT_CHANGES = 2  # `plan --detailed-exitcode` encontrou diferenças (útil no C
 def _connect(args: argparse.Namespace) -> ZabbixAPI:
     url = args.url or os.environ.get("ZABBIX_URL", "http://localhost:8080")
     token = os.environ.get("ZABBIX_API_TOKEN")
-    api = ZabbixAPI(url, token=token)
+    timeout = float(os.environ.get("ZABBIX_TIMEOUT", "120"))
+    api = ZabbixAPI(url, token=token, timeout=timeout)
     if not token:
         user = os.environ.get("ZABBIX_USER", "Admin")
         password = os.environ.get("ZABBIX_PASSWORD")
@@ -50,9 +51,10 @@ def cmd_plan(args: argparse.Namespace, *, apply: bool = False) -> int:
             return EXIT_OK
         for change in changes:
             print(change.render())
-        print(summarize(changes))
+        print(summarize(changes), flush=True)
         if apply:
-            reconciler.apply(changes)
+            print("Aplicando:")
+            reconciler.apply(changes, on_done=lambda c: print(f"  ok {c.kind} {c.name!r}", flush=True))
             print("Aplicado.")
             return EXIT_OK
     return EXIT_CHANGES if args.detailed_exitcode else EXIT_OK

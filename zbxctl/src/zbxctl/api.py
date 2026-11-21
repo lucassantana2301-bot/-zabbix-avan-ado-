@@ -29,7 +29,8 @@ class ZabbixAPI:
         url: str,
         *,
         token: str | None = None,
-        timeout: float = 15.0,
+        # Linkar template grande (ex.: Linux by Zabbix agent) cria dezenas de itens numa só chamada.
+        timeout: float = 120.0,
         transport: httpx.BaseTransport | None = None,
         verify_tls: bool = True,
     ) -> None:

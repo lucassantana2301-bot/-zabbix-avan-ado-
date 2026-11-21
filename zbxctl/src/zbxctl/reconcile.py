@@ -158,10 +158,12 @@ class Reconciler:
         self._seed = ctx_seed
         return changes
 
-    def apply(self, changes: list[Change]) -> None:
+    def apply(self, changes: list[Change], on_done: Callable[[Change], None] | None = None) -> None:
         ctx = getattr(self, "_seed", Context())
         for change in changes:
             change.run(ctx)
+            if on_done:
+                on_done(change)
 
     # ------------------------------------------------------------------ grupos
 
