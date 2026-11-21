@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#07080a">
-<title>Entrar · Loja demo</title>
+<title>Entrar · Sistema demo</title>
 <style>
   :root {
     --bg: #07080a;
@@ -97,7 +97,7 @@
 <main>
   <div class="orb" aria-hidden="true"></div>
   <h1>Entre no painel.</h1>
-  <p class="lead">Loja demo, monitorada pelo Zabbix.</p>
+  <p class="lead">Sistema demo, monitorado pelo Zabbix.</p>
 
   <form id="form" novalidate>
     <div class="group" id="group">
@@ -158,7 +158,7 @@ form.addEventListener("submit", async (event) => {
     fail(typeof body.detail === "string" ? body.detail : "Não foi possível entrar. Tente de novo.");
     password.value = ""; password.focus();
   } catch {
-    fail("Sem conexão com a loja. Verifique se o container está rodando.");
+    fail("Sem conexão com o sistema. Verifique se o container está rodando.");
   }
   submit.disabled = false; label.textContent = "Entrar";
 });

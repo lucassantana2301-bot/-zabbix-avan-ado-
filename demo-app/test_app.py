@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 import app as demo
 
-EMAIL, PASSWORD = "lucas@loja.demo", "senha-forte-123"
+EMAIL, PASSWORD = "lucas@sistema.demo", "senha-forte-123"
 
 
 @pytest.fixture(autouse=True)
@@ -108,7 +108,7 @@ def test_panel_redirects_to_login(client: TestClient) -> None:
 
 def test_login_sets_hardened_cookie(client: TestClient) -> None:
     res = client.post(
-        "/api/login", json={"email": "  LUCAS@loja.demo ", "password": PASSWORD}
+        "/api/login", json={"email": "  LUCAS@sistema.demo ", "password": PASSWORD}
     )
     assert res.status_code == 204
     cookie = res.headers["set-cookie"].lower()
@@ -123,7 +123,7 @@ def test_login_sets_hardened_cookie(client: TestClient) -> None:
 def test_wrong_credentials_are_generic(client: TestClient) -> None:
     wrong_pass = client.post("/api/login", json={"email": EMAIL, "password": "x"})
     wrong_user = client.post(
-        "/api/login", json={"email": "outro@loja.demo", "password": PASSWORD}
+        "/api/login", json={"email": "outro@sistema.demo", "password": PASSWORD}
     )
     assert wrong_pass.status_code == wrong_user.status_code == 401
     assert (

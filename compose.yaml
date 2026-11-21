@@ -92,7 +92,7 @@ services:
     build: demo-app
     environment:
       CHAOS_TOKEN: ${CHAOS_TOKEN:-}
-      DEMO_EMAIL: ${DEMO_EMAIL:-admin@loja.demo}
+      DEMO_EMAIL: ${DEMO_EMAIL:-admin@sistema.demo}
       # Vazia: o app gera uma senha forte e mostra em `docker compose logs demo-app`.
       DEMO_PASSWORD: ${DEMO_PASSWORD:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}

@@ -88,7 +88,7 @@ class Credentials:
 
 
 def _load_credentials() -> Credentials:
-    email = os.getenv("DEMO_EMAIL", "admin@loja.demo")
+    email = os.getenv("DEMO_EMAIL", "admin@sistema.demo")
     password = os.getenv("DEMO_PASSWORD", "")
     if not password:
         # Sem senha configurada, gera uma forte e mostra só no log do container.
@@ -220,11 +220,11 @@ async def set_chaos(
     session_ok = current_session(request) is not None and _same_origin(request)
     if not (token_ok or session_ok):
         raise HTTPException(
-            status_code=401, detail="Entre no painel para mudar o modo da loja."
+            status_code=401, detail="Entre no painel para mudar o modo do sistema."
         )
     _state.update(mode=mode, since=time.time())
     who = "token" if token_ok else "painel"
-    log.info("modo da loja alterado para %s via %s", mode, who)
+    log.info("modo do sistema alterado para %s via %s", mode, who)
     return {"mode": mode}
 
 
