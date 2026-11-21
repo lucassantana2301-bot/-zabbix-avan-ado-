@@ -51,8 +51,10 @@ def main() -> None:
     demo, agent = hosts["demo-app"], hosts["zabbix-agent"]
 
     def item_value(hostid: str, key: str) -> str | None:
+        # webitems: sem isso o item.get omite os itens criados por cenários web.
         items = api.call(
-            "item.get", {"output": ["lastvalue", "lastclock"], "hostids": [hostid], "filter": {"key_": key}}
+            "item.get",
+            {"output": ["lastvalue", "lastclock"], "hostids": [hostid], "filter": {"key_": key}, "webitems": True},
         )
         if items and int(items[0]["lastclock"]) > 0:
             return str(items[0]["lastvalue"])
@@ -68,6 +70,7 @@ def main() -> None:
                 "output": ["key_", "lastvalue", "lastclock", "state", "error", "status"],
                 "hostids": [demo],
                 "search": {"key_": "web.test"},
+                "webitems": True,
             },
         )
         for it in items:
