@@ -122,6 +122,15 @@ O YAML é validado com Pydantic (`zbxctl validate`) antes de qualquer chamada: c
 - **ruff** e **mypy --strict** no CI.
 - **Teste ponta a ponta no GitHub Actions** contra o Zabbix real: sobe a stack, aplica o YAML, confere que o segundo `plan` está vazio, derruba a loja, espera o Zabbix abrir o problema, religa, espera a resolução e valida que o Grafana conecta no Zabbix.
 
+## Lições do teste ponta a ponta
+
+O E2E no CI pegou dois problemas que testes com mock nunca pegariam:
+
+1. **Banco recém-criado sem estatísticas.** Logo após o `init_db_only`, o Postgres ainda não tinha rodado `ANALYZE`. A consulta de dependências de triggers, usada ao linkar o template *Linux by Zabbix agent* e na sincronização de configuração do server, escolhia um plano ruim e ficava **mais de 3 minutos** rodando, o que travava o `apply` e atrasava os web checks. O diagnóstico veio de um monitor de `pg_stat_activity` rodando em paralelo no CI. A correção é um passo `zabbix-db-analyze` no compose, entre o init e o server: o `apply` caiu de minutos para **1 segundo**.
+2. **`item.get` esconde itens de cenário web.** Sem o parâmetro `webitems: true`, a API não retorna `web.test.fail[...]`. O monitoramento funcionava, mas o teste não enxergava o item.
+
+Resultado da última execução no CI: web check saudável em 15 s, problema aberto **10 s** depois de derrubar a loja e resolvido 15 s depois de religar.
+
 ## Segurança
 
 - Portas publicadas só em `127.0.0.1`.
