@@ -1,0 +1,7 @@
+apiVersion: 1
+
+# O Zabbix é um "app plugin": precisa estar habilitado para o data source existir.
+apps:
+  - type: alexanderzobnin-zabbix-app
+    org_id: 1
+    disabled: false

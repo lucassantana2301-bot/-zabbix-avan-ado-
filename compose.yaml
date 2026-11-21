@@ -1,0 +1,107 @@
+name: zabbix-observability
+
+# Variáveis de banco compartilhadas por init, server e frontend.
+x-zabbix-db: &zabbix-db
+  DB_SERVER_HOST: postgres
+  POSTGRES_USER: zabbix
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zabbix}
+  POSTGRES_DB: zabbix
+
+x-zabbix-image: &zabbix-server-image zabbix/zabbix-server-pgsql:alpine-7.0-latest
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zabbix}
+      POSTGRES_DB: zabbix
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U zabbix -d zabbix']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # Cria o esquema do Zabbix uma única vez e sai (padrão do zabbix-docker 7.0).
+  zabbix-db-init:
+    image: *zabbix-server-image
+    command: init_db_only
+    environment: *zabbix-db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  zabbix-server:
+    image: *zabbix-server-image
+    environment:
+      <<: *zabbix-db
+      ZBX_CACHESIZE: 64M
+      ZBX_STARTHTTPPOLLERS: '2'
+      # Recarrega a configuração a cada 10 s: o que o zbxctl aplica entra em ação rápido.
+      ZBX_CACHEUPDATEFREQUENCY: '10'
+    depends_on:
+      zabbix-db-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    environment:
+      <<: *zabbix-db
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_NAME: Observabilidade Demo
+      PHP_TZ: America/Sao_Paulo
+    ports:
+      - '127.0.0.1:8080:8080'
+    depends_on:
+      - zabbix-server
+    restart: unless-stopped
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:alpine-7.0-latest
+    hostname: zabbix-agent
+    environment:
+      ZBX_HOSTNAME: zabbix-agent
+      ZBX_SERVER_HOST: zabbix-server
+      # Checks passivos (template "Linux by Zabbix agent"); sem modo ativo, sem ruído no log.
+      ZBX_ACTIVE_ALLOW: 'false'
+    depends_on:
+      - zabbix-server
+    restart: unless-stopped
+
+  demo-app:
+    build: demo-app
+    environment:
+      CHAOS_TOKEN: ${CHAOS_TOKEN:-}
+    ports:
+      - '127.0.0.1:8000:8000'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_INSTALL_PLUGINS: alexanderzobnin-zabbix-app
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/observabilidade.json
+      ZABBIX_USER: ${ZABBIX_USER:-Admin}
+      ZABBIX_PASSWORD: ${ZABBIX_PASSWORD:-zabbix}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana:/var/lib/grafana
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      - zabbix-web
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  grafana:

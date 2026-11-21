@@ -1,0 +1,397 @@
+{
+  "uid": "observabilidade",
+  "title": "Observabilidade: loja demo",
+  "tags": [
+    "zabbix",
+    "demo"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Loja online",
+      "description": "Passo com falha no web check /health. 0 = no ar.",
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "alexanderzobnin-zabbix-datasource",
+        "uid": "zabbix"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "alexanderzobnin-zabbix-datasource",
+            "uid": "zabbix"
+          },
+          "queryType": "0",
+          "group": {
+            "filter": "Aplicações"
+          },
+          "host": {
+            "filter": "demo-app"
+          },
+          "application": {
+            "filter": ""
+          },
+          "itemTag": {
+            "filter": ""
+          },
+          "item": {
+            "filter": "/Failed step of scenario \"Health\"/"
+          },
+          "functions": [],
+          "options": {
+            "showDisabledItems": false,
+            "skipEmptyValues": false
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "No ar",
+                  "color": "green",
+                  "index": 0
+                }
+              }
+            },
+            {
+              "type": "range",
+              "options": {
+                "from": 1,
+                "to": 1000,
+                "result": {
+                  "text": "Fora do ar",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Tempo de resposta do /health",
+      "gridPos": {
+        "h": 7,
+        "w": 10,
+        "x": 6,
+        "y": 0
+      },
+      "datasource": {
+        "type": "alexanderzobnin-zabbix-datasource",
+        "uid": "zabbix"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "alexanderzobnin-zabbix-datasource",
+            "uid": "zabbix"
+          },
+          "queryType": "0",
+          "group": {
+            "filter": "Aplicações"
+          },
+          "host": {
+            "filter": "demo-app"
+          },
+          "application": {
+            "filter": ""
+          },
+          "itemTag": {
+            "filter": ""
+          },
+          "item": {
+            "filter": "/Response time for step \"Health\" of scenario \"Health\"/"
+          },
+          "functions": [],
+          "options": {
+            "showDisabledItems": false,
+            "skipEmptyValues": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "hidden",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "alexanderzobnin-zabbix-triggers-panel",
+      "title": "Problemas ativos",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "datasource": {
+        "type": "alexanderzobnin-zabbix-datasource",
+        "uid": "zabbix"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "alexanderzobnin-zabbix-datasource",
+            "uid": "zabbix"
+          },
+          "queryType": "5",
+          "group": {
+            "filter": "/.*/"
+          },
+          "host": {
+            "filter": "/.*/"
+          },
+          "application": {
+            "filter": ""
+          },
+          "proxy": {
+            "filter": ""
+          },
+          "trigger": {
+            "filter": ""
+          },
+          "tags": {
+            "filter": ""
+          },
+          "showProblems": "problems",
+          "options": {
+            "minSeverity": 0,
+            "acknowledged": 2,
+            "sortProblems": "default",
+            "limit": 50
+          }
+        }
+      ],
+      "options": {
+        "layout": "table",
+        "showTags": true,
+        "hostField": true,
+        "severityField": true,
+        "ageField": true
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "CPU do agente",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "datasource": {
+        "type": "alexanderzobnin-zabbix-datasource",
+        "uid": "zabbix"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "alexanderzobnin-zabbix-datasource",
+            "uid": "zabbix"
+          },
+          "queryType": "0",
+          "group": {
+            "filter": "Infraestrutura"
+          },
+          "host": {
+            "filter": "zabbix-agent"
+          },
+          "application": {
+            "filter": ""
+          },
+          "itemTag": {
+            "filter": ""
+          },
+          "item": {
+            "filter": "CPU utilization"
+          },
+          "functions": [],
+          "options": {
+            "showDisabledItems": false,
+            "skipEmptyValues": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "hidden",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Memória do agente",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "datasource": {
+        "type": "alexanderzobnin-zabbix-datasource",
+        "uid": "zabbix"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "alexanderzobnin-zabbix-datasource",
+            "uid": "zabbix"
+          },
+          "queryType": "0",
+          "group": {
+            "filter": "Infraestrutura"
+          },
+          "host": {
+            "filter": "zabbix-agent"
+          },
+          "application": {
+            "filter": ""
+          },
+          "itemTag": {
+            "filter": ""
+          },
+          "item": {
+            "filter": "Memory utilization"
+          },
+          "functions": [],
+          "options": {
+            "showDisabledItems": false,
+            "skipEmptyValues": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "hidden",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

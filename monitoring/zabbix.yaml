@@ -1,0 +1,58 @@
+# Monitoramento como código.
+# Edite este arquivo, rode `zbxctl plan` para ver o diff e `zbxctl apply` para aplicar.
+# Segredos vêm de variáveis de ambiente (${VAR}) e nunca são versionados.
+
+host_groups:
+  - Aplicações
+  - Infraestrutura
+
+hosts:
+  # O próprio container do Zabbix Agent 2: CPU, memória, disco e rede.
+  - name: zabbix-agent
+    groups: [Infraestrutura]
+    templates: [Linux by Zabbix agent]
+    agent:
+      dns: zabbix-agent
+      port: 10050
+    tags:
+      env: demo
+      camada: infra
+
+  # API de demonstração com modo "caos" para simular queda e lentidão.
+  - name: demo-app
+    groups: [Aplicações]
+    tags:
+      env: demo
+      servico: loja-online
+    web_checks:
+      - name: Health
+        url: http://demo-app:8000/health
+        required: '"status":"ok"'
+        interval: 15s
+        timeout: 5s
+        down:
+          severity: high
+        slow:
+          threshold_ms: 1500
+          window: 1m
+          severity: warning
+
+      - name: Catalogo
+        url: http://demo-app:8000/api/produtos
+        status_codes: '200'
+        interval: 30s
+        down:
+          severity: average
+
+  # Exemplo: monitorar um projeto publicado (descomente e ajuste a URL).
+  # - name: b3-portfolio-tracker
+  #   groups: [Aplicações]
+  #   web_checks:
+  #     - name: Health
+  #       url: https://SEU-DOMINIO/health/ready
+
+alerting:
+  telegram:
+    bot_token: ${TELEGRAM_BOT_TOKEN}
+    chat_id: ${TELEGRAM_CHAT_ID}
+    min_severity: warning
