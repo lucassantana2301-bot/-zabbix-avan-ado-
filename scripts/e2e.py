@@ -23,15 +23,23 @@ GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 PROBLEM = "Health fora do ar em demo-app"
 
 
-def wait_for(label: str, check: Callable[[], Any], timeout: float = 240, every: float = 5) -> Any:
+def wait_for(
+    label: str,
+    check: Callable[[], Any],
+    timeout: float = 240,
+    every: float = 5,
+    diagnose: Callable[[], None] | None = None,
+) -> Any:
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         result = check()
         if result:
-            print(f"ok   {label} ({time.monotonic() - start:.0f}s)")
+            print(f"ok   {label} ({time.monotonic() - start:.0f}s)", flush=True)
             return result
         time.sleep(every)
     print(f"FALHA {label}: não aconteceu em {timeout:.0f}s", file=sys.stderr)
+    if diagnose:
+        diagnose()
     sys.exit(1)
 
 
@@ -53,7 +61,26 @@ def main() -> None:
     def problems() -> list[str]:
         return [p["name"] for p in api.call("problem.get", {"output": ["name"], "hostids": [demo]})]
 
-    wait_for("web check do demo-app saudável", lambda: item_value(demo, "web.test.fail[Health]") == "0")
+    def dump_web_items() -> None:
+        items = api.call(
+            "item.get",
+            {
+                "output": ["key_", "lastvalue", "lastclock", "state", "error", "status"],
+                "hostids": [demo],
+                "search": {"key_": "web.test"},
+            },
+        )
+        for it in items:
+            print(f"  {it['key_']}: value={it['lastvalue']!r} clock={it['lastclock']} "
+                  f"state={it['state']} status={it['status']} error={it['error']!r}", file=sys.stderr)
+        tests = api.call("httptest.get", {"output": "extend", "hostids": [demo], "selectSteps": "extend"})
+        print(f"  httptests: {tests}", file=sys.stderr)
+
+    wait_for(
+        "web check do demo-app saudável",
+        lambda: item_value(demo, "web.test.fail[Health]") == "0",
+        diagnose=dump_web_items,
+    )
     wait_for("agente reportando CPU", lambda: item_value(agent, "system.cpu.util") is not None)
 
     httpx.post(f"{APP_URL}/chaos/down", timeout=5).raise_for_status()
