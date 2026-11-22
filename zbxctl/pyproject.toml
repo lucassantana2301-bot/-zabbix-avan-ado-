@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zbxctl"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Monitoramento como código para Zabbix 7: YAML declarativo com plan/apply idempotente"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -40,3 +40,6 @@ strict = true
 python_version = "3.11"
 plugins = ["pydantic.mypy"]
 mypy_path = "src"
+
+[tool.hatch.version]
+path = "src/zbxctl/__init__.py"
