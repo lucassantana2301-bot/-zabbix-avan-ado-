@@ -5,6 +5,7 @@
 **Stack de monitoramento com Zabbix 7, Grafana e alertas no Telegram, configurada 100% como código. Inclui uma loja de demonstração com botão de "caos" para provar que o alerta chega.**
 
 [![CI](https://github.com/lucassantana2301-bot/-zabbix-avan-ado-/actions/workflows/ci.yml/badge.svg)](https://github.com/lucassantana2301-bot/-zabbix-avan-ado-/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/lucassantana2301-bot/-zabbix-avan-ado-?sort=semver)](https://github.com/lucassantana2301-bot/-zabbix-avan-ado-/releases)
 ![Zabbix](https://img.shields.io/badge/Zabbix-7.0_LTS-D40000)
 ![Grafana](https://img.shields.io/badge/Grafana-11-F46800?logo=grafana&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
@@ -168,6 +169,10 @@ As senhas padrão (`zabbix`, `admin`) existem para a demonstração local. Antes
 - [ ] Monitoramento de certificado TLS e expiração de domínio
 - [ ] Exportar/importar templates próprios via `configuration.import`
 - [ ] Deploy em VM com Terraform
+
+## Contribuindo
+
+Veja o [guia de contribuição](CONTRIBUTING.md), o [CHANGELOG](CHANGELOG.md) e a [política de segurança](SECURITY.md). Os itens do roadmap estão abertos como [issues](../../issues).
 
 ## Licença
 
